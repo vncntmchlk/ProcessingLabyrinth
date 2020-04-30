@@ -4,7 +4,7 @@ let sample;
 var pressed = false;
 
 function preload() {
-  sample = loadSound('schnarchen.mp3');
+  sample = loadSound('src/schnarchen.mp3');
 }
 
 function setup()
