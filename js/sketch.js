@@ -6,17 +6,17 @@ var _left = false;
 var wallSize = 6;
 let sample;
 
-function preload() {
-  sample = loadSound('../assets/schnarchen.mp3');
-}
+// function preload() {
+//   sample = loadSound('../assets/schnarchen.mp3');
+// }
 
 function setup()
 {
   createCanvas(1000, 760);
   background(250,250,250);
   hero = new Player(20, 600);
-  sample.loop();  
-  sample.amp(0);  
+  //sample.loop();  
+  //sample.amp(0);  
   //sample.pause();
 }
 
@@ -222,5 +222,5 @@ function soundCloud(xpos, ypos, cloudX, cloudY) {
     amp = 0;
   };
   //console.log(amp);
-  sample.amp(amp);
+  //sample.amp(amp);
 }
