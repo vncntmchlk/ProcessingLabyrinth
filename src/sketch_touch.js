@@ -1,13 +1,12 @@
 let figur; 
 let posFigur = [];
 let clouds = [];
-let wallSize = 10;
+let wallSize = 15; // wenn die waende zu duenn sind kann man durchglitchen
 let samplePath = [
   'src/sf/schnarchen.mp3',
   'src/sf/schluerfen.mp3'
 ];
 let samples = [];
-let pressed = false;
 
 function preload() {
   samplePath.forEach(function(path) {
@@ -15,15 +14,14 @@ function preload() {
   });
 }
 
-function setup()
-{
+function setup() {
   // soll auf langsamen Geraeten gleich laufen wie auf schnellen.
   // bei hoeherer Framerate kann es durch cpu belastung langsamer werden
   frameRate(16); 
-  createCanvas(1000, 760); // je nach bildschirmgroesse anpassen
-  background(250,250,250);
-  figur = new Player(20, 600);
-  clouds.push(new SoundCloud(150, 50, 100, samples[0]));
+  createCanvas(1000, 760); // noch je nach bildschirmgroesse anpassen
+  noStroke();
+  figur = new Player(20, 600); // startposition angeben
+  clouds.push(new SoundCloud(150, 50, 100, samples[0])); // position x y, size und sample
   clouds.push(new SoundCloud(350, 250, 100, samples[1]));
 
 }
@@ -44,7 +42,7 @@ function draw() {
   }
 }
 
-function drawMaze(){
+function drawMaze() {
   fill(0);
   rect(-10, -10, 12, 780);
   rect(-10, -10, 1020, 12);
@@ -127,12 +125,8 @@ class Player {
     this.ballSize = 20;
     this.ballW = 12; //(ballSize / 2) + 1;
     this.moveSpeed = 8;
+    this.color = color(204, 102, 0);
   }
-
-  // oben ist 45 bis 135
-  // rechts ist 135 bis 225
-  // unten ist 225 bis 315
-  // sonst links
 
   checkAngleAndMove(){
     let dx = mouseX - this.xpos;
@@ -141,7 +135,7 @@ class Player {
     switch (true) {
         case (angle > 45 && angle < 135): //oben
             let upColor = get(int(this.xpos), (int(this.ypos)- this.ballW));
-            if(upColor[0] != 0){
+            if(upColor[0] != 0){ //kollision pruefen, nur bei weissen pixeln weiter bewegen
               this.ypos = this.ypos - this.moveSpeed;
             }
             break;
@@ -166,6 +160,7 @@ class Player {
   }
   
   display(){
+    fill(this.color);
     ellipse(this.xpos, this.ypos, this.ballSize, this.ballSize); 
   }
 
@@ -186,7 +181,7 @@ class SoundCloud {
   }
 
   display (){
-    stroke(100, 100);
+    //stroke(100, 100);
     fill(100, 100);
     ellipse(this.xpos, this.ypos, this.cloudSize, this.cloudSize); 
   }
@@ -204,29 +199,4 @@ class SoundCloud {
       }
     }
   }
-
-  // setAmp (figX, figY){
-  //   this.distanceToFig = dist(this.xpos, this.ypos, figX, figY);
-  //   this.amp = map(this.distanceToFig, this.cloudSize * 0.5, 0, 0, 1);
-  //   this.amp = map(this.distanceToFig, this.cloudSize * 0.5, 0, 0, 1);
-  //   if (this.amp < 0) { 
-  //     this.amp = 0;
-  //   };
-  //   sample.amp(this.amp);
-  // }
-
-  // function soundCloud(xpos, ypos, cloudX, cloudY) {
-  //   let d; // Entfernung vom ball zum mittelpunkt
-  //   let amp;
-  //   let soundSize = 250;
-  //   stroke(100, 100);
-  //   fill(100, 100);
-  //   ellipse( cloudX, cloudY, soundSize, soundSize); 
-  //   d = dist( cloudX, cloudY, xpos, ypos);
-  //   amp = map(d, soundSize * 0.5, 0, 0, 1);
-  //   if (amp < 0) { 
-  //     amp = 0;
-  //   };
-  //   sample.amp(amp);
-  // }
 }
