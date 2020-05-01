@@ -7,6 +7,7 @@ let samplePath = [
   'src/sf/schluerfen.mp3'
 ];
 let samples = [];
+let counter = 0;
 
 function preload() {
   samplePath.forEach(function(path) {
@@ -18,15 +19,16 @@ function setup() {
   // soll auf langsamen Geraeten gleich laufen wie auf schnellen.
   // bei hoeherer Framerate kann es durch cpu belastung langsamer werden
   frameRate(16); 
-  createCanvas(1000, 760); // noch je nach bildschirmgroesse anpassen
+  createCanvas(displayWidth, displayHeight); // noch je nach bildschirmgroesse anpassen
   noStroke();
-  figur = new Player(20, 600); // startposition angeben
-  clouds.push(new SoundCloud(150, 50, 100, samples[0])); // position x y, size und sample
-  clouds.push(new SoundCloud(350, 250, 100, samples[1]));
-
+  angleMode(DEGREES); // 
+  figur = new Player(20, 20); // startposition angeben
+  clouds.push(new SoundCloud(550, 350, 100, samples[0])); // position x y, size und sample
+  clouds.push(new SoundCloud(250, 150, 100, samples[1]));
 }
 
 function draw() {
+  
   background(250,250,250);
   drawMaze();
   figur.display();
@@ -40,6 +42,9 @@ function draw() {
   if(mouseIsPressed){
     figur.checkAngleAndMove();
   }
+
+  counter += 10;
+
 }
 
 function drawMaze() {
@@ -131,7 +136,7 @@ class Player {
   checkAngleAndMove(){
     let dx = mouseX - this.xpos;
     let dy = mouseY - this.ypos;
-    let angle = degrees(atan2(dy, dx)) + 180;  // hier kann man die degree funktion rausnehmen wenn die radian werte herausfindet 
+    let angle = atan2(dy, dx) + 180;  
     switch (true) {
         case (angle > 45 && angle < 135): //oben
             let upColor = get(int(this.xpos), (int(this.ypos)- this.ballW));
@@ -178,12 +183,27 @@ class SoundCloud {
     this.inside = 0; //ehemals amp
     this.distanceToFig = 0;
     this.sample = sample;
+    this.cloudSeed = random();
+    this.color = color(random() * 150, random() * 150, random() * 150, 150);
   }
 
   display (){
     //stroke(100, 100);
-    fill(100, 100);
-    ellipse(this.xpos, this.ypos, this.cloudSize, this.cloudSize); 
+    fill(this.color);
+    translate(this.xpos, this.ypos);
+    let newSize = this.cloudSize / 4; // den teilwert kann man ermitteln indem man die ellipse dazu schaltet
+    let angle = counter;
+    beginShape();
+    for (let a = 0; a < 360; a+=15) {
+      let offset = sin(angle) * (2 + this.cloudSeed) + 60 * noise(a * (0.03  + this.cloudSeed));
+      let x = (newSize + offset) * cos(a);
+      let y = (newSize + offset) * sin(a);
+      curveVertex(x, y);
+      angle += 13;
+    }
+    endShape(CLOSE);
+    translate(-this.xpos, -this.ypos);
+    //ellipse(this.xpos, this.ypos, this.cloudSize, this.cloudSize); 
   }
 
   onOffSound (){
@@ -200,3 +220,36 @@ class SoundCloud {
     }
   }
 }
+
+
+
+
+// let counter = 0;
+
+// function setup() {
+//   createCanvas(600, 400);
+//   angleMode(DEGREES);
+//   noStroke();
+// }
+
+// function draw() {
+//   background(220);
+//   translate(width / 2, height / 2);
+//   fill(0);
+
+//   let w = 50;
+//   let h = 25;
+//   let angle = counter;
+//   beginShape();
+//   for (let a = 0; a < 360; a+=1) {
+//     let offset = sin(angle)*2 + 40*noise(a*0.03);
+//     let x = (w+offset) * cos(a);
+//     let y = (h+offset) * sin(a);
+//     curveVertex(x,y);
+//     angle += 10;
+//   }
+//   endShape(CLOSE);
+  
+//   counter+=3;
+
+// }
