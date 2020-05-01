@@ -1,35 +1,46 @@
-let hero;
-var wallSize = 10;
-let sample;
-var pressed = false;
+let figur; 
+let posFigur = [];
+let clouds = [];
+let wallSize = 10;
+let samplePath = [
+  'src/sf/schnarchen.mp3',
+  'src/sf/schluerfen.mp3'
+];
+let samples = [];
+let pressed = false;
 
 function preload() {
-  sample = loadSound('src/schnarchen.mp3');
+  samplePath.forEach(function(path) {
+    samples.push(loadSound(path));
+  });
 }
 
 function setup()
 {
-  frameRate(16);
-  createCanvas(1000, 760);
+  // soll auf langsamen Geraeten gleich laufen wie auf schnellen.
+  // bei hoeherer Framerate kann es durch cpu belastung langsamer werden
+  frameRate(16); 
+  createCanvas(1000, 760); // je nach bildschirmgroesse anpassen
   background(250,250,250);
-  hero = new Player(20, 600);
-  sample.loop();  
-  sample.amp(0);  
-//   sample.pause();
+  figur = new Player(20, 600);
+  clouds.push(new SoundCloud(150, 50, 100, samples[0]));
+  clouds.push(new SoundCloud(350, 250, 100, samples[1]));
+
 }
 
 function draw() {
-  var posBall;
   background(250,250,250);
-  hero.display();
-
-  posBall = hero.getPos();
-  soundCloud(posBall[0], posBall[1], 50, 50);
-
   drawMaze();
-  
+  figur.display();
+  posFigur = figur.getPos();
+
+  clouds.forEach(function(cloud) {
+    cloud.display();
+    cloud.onOffSound();
+  });
+
   if(mouseIsPressed){
-    hero.checkAngle();
+    figur.checkAngleAndMove();
   }
 }
 
@@ -123,43 +134,35 @@ class Player {
   // unten ist 225 bis 315
   // sonst links
 
-  checkAngle(){
-    //let v1 = createVector(mouseX, mouseY);
-    //let v2 = createVector(this.xpos, this.ypos, 0);
-    var dx = mouseX - this.xpos;
-    var dy = mouseY - this.ypos;
-    var angle = degrees(atan2(dy, dx)) + 180;  
-    //let angle = v1.angleBetween(v2);
-    // angle is PI/2
+  checkAngleAndMove(){
+    let dx = mouseX - this.xpos;
+    let dy = mouseY - this.ypos;
+    let angle = degrees(atan2(dy, dx)) + 180;  // hier kann man die degree funktion rausnehmen wenn die radian werte herausfindet 
     switch (true) {
         case (angle > 45 && angle < 135): //oben
-            var upColor = get(int(this.xpos), (int(this.ypos)- this.ballW));
+            let upColor = get(int(this.xpos), (int(this.ypos)- this.ballW));
             if(upColor[0] != 0){
-               this.ypos = this.ypos - this.moveSpeed;
+              this.ypos = this.ypos - this.moveSpeed;
             }
             break;
         case (angle > 135 && angle < 225): //rechts
-            var rightColor = get((int(this.xpos) + this.ballW), int(this.ypos));  
+            let rightColor = get((int(this.xpos) + this.ballW), int(this.ypos));  
             if(rightColor[0] != 0){
                 this.xpos = this.xpos + this.moveSpeed;
             }
             break;
         case (angle > 225 && angle < 315): //unten
-            var downColor = get(int(this.xpos), (int(this.ypos) + this.ballW)); 
+            let downColor = get(int(this.xpos), (int(this.ypos) + this.ballW)); 
             if(downColor[0] != 0){
                 this.ypos = this.ypos + this.moveSpeed;
             }
             break;
         default: //links
-            var leftColor = get((int(this.xpos) - this.ballW ), int(this.ypos)); 
+            let leftColor = get((int(this.xpos) - this.ballW ), int(this.ypos)); 
             if(leftColor[0] != 0){
                 this.xpos = this.xpos - this.moveSpeed;
             }
     }
-
-
-
-    //console.log(angle)
   }
   
   display(){
@@ -167,25 +170,63 @@ class Player {
   }
 
   getPos() {
-    var results = [this.xpos, this.ypos];
-    // results[0] = xpos;
-    // results[1] = ypos;
+    let results = [this.xpos, this.ypos];
     return results;
   }
 }
 
-function soundCloud(xpos, ypos, cloudX, cloudY) {
-  var d; // Entfernung vom ball zum mittelpunkt
-  var amp;
-  var soundSize = 250;
-  stroke(100, 100);
-  fill(100, 100);
-  ellipse( cloudX, cloudY, soundSize, soundSize); 
-  d = dist( cloudX, cloudY, xpos, ypos);
-  amp = map(d, soundSize * 0.5, 0, 0, 1);
-  if (amp < 0) { 
-    amp = 0;
-  };
-  //console.log(amp);
-  sample.amp(amp);
+class SoundCloud {
+  constructor(posX, posY, size, sample) {
+    this.xpos = posX;
+    this.ypos = posY;
+    this.cloudSize = size;
+    this.inside = 0; //ehemals amp
+    this.distanceToFig = 0;
+    this.sample = sample;
+  }
+
+  display (){
+    stroke(100, 100);
+    fill(100, 100);
+    ellipse(this.xpos, this.ypos, this.cloudSize, this.cloudSize); 
+  }
+
+  onOffSound (){
+    this.distanceToFig = dist(this.xpos, this.ypos, posFigur[0], posFigur[1]); //posFigur ist global, da es nur eine gibt
+    this.inside = map(this.distanceToFig, this.cloudSize * 0.5, 0, 0, 1);
+    if (this.inside < 0) { 
+      if (this.sample.isPlaying()) {
+        this.sample.pause();
+      }
+    } else {
+      if (this.sample.isPlaying() == false) {
+        this.sample.loop();
+      }
+    }
+  }
+
+  // setAmp (figX, figY){
+  //   this.distanceToFig = dist(this.xpos, this.ypos, figX, figY);
+  //   this.amp = map(this.distanceToFig, this.cloudSize * 0.5, 0, 0, 1);
+  //   this.amp = map(this.distanceToFig, this.cloudSize * 0.5, 0, 0, 1);
+  //   if (this.amp < 0) { 
+  //     this.amp = 0;
+  //   };
+  //   sample.amp(this.amp);
+  // }
+
+  // function soundCloud(xpos, ypos, cloudX, cloudY) {
+  //   let d; // Entfernung vom ball zum mittelpunkt
+  //   let amp;
+  //   let soundSize = 250;
+  //   stroke(100, 100);
+  //   fill(100, 100);
+  //   ellipse( cloudX, cloudY, soundSize, soundSize); 
+  //   d = dist( cloudX, cloudY, xpos, ypos);
+  //   amp = map(d, soundSize * 0.5, 0, 0, 1);
+  //   if (amp < 0) { 
+  //     amp = 0;
+  //   };
+  //   sample.amp(amp);
+  // }
 }
