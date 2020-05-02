@@ -1,13 +1,14 @@
 let cols, rows;
-let w = 80; // wie breit der Weg ist  
+let widthOfWay; // wie breit der Weg ist  
 let grid = [];
 let current;
 let stack = [];
 let mazeFinished = false;
+let mazeOffset = 100;
 
 function setupMaze () {
-    cols = floor(width / w);
-    rows = floor(height / w);
+    cols = floor(width / widthOfWay);
+    rows = floor((height - mazeOffset) / widthOfWay) ;
   
     for (let j = 0; j < rows; j++) {
       for (let i = 0; i < cols; i++) {
@@ -19,7 +20,7 @@ function setupMaze () {
 };
 
 function drawMaze () {
-    background(255);
+    
     for (let i = 0; i < grid.length; i++) {
         grid[i].show();
     }
@@ -119,21 +120,21 @@ function Cell(i, j) {
     };
 
     this.show = function() {
-        let x = this.i * w;
-        let y = this.j * w;
+        let x = this.i * widthOfWay;
+        let y = (this.j * widthOfWay) + mazeOffset;
         stroke(0);
         strokeWeight(wallSize);
         if (this.walls[0]) {
-        line(x, y, x + w, y);
+        line(x, y, x + widthOfWay, y);
         }
         if (this.walls[1]) {
-        line(x + w, y, x + w, y + w);
+        line(x + widthOfWay, y, x + widthOfWay, y + widthOfWay);
         }
         if (this.walls[2]) {
-        line(x + w, y + w, x, y + w);
+        line(x + widthOfWay, y + widthOfWay, x, y + widthOfWay);
         }
         if (this.walls[3]) {
-        line(x, y + w, x, y);
+        line(x, y + widthOfWay, x, y);
         };
     //   if(this.sackGasse){
     //     ellipse(x,y,50,50);

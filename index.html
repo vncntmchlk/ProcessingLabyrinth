@@ -13,13 +13,24 @@
   </style>
   <script src="src/p5.min.js"></script>
   <script src="src/p5.sound.min.js"></script>
+  <script>
+    let fixedSize;
+      function myFunction(testSize) {
+    if (testSize.matches) { // If media query matches
+      fixedSize = false;
+    } else {
+      fixedSize = true;
+    }
+  }
+  let testSize = window.matchMedia("(max-width: 800px)")
+  myFunction(testSize) // Call listener function at run time
+  testSize.addListener(myFunction) // Attach listener function on state changes
+  </script>
   <script src="src/createMaze.js"></script>
   <script src="src/sketch_maze_clean.js"></script>
 </head>
 
 <body> 
-  <!-- <p style="height: 200px;  width: 50%; background-color: powderblue;">
-    text</p> -->
 </body>
 
-</html>
+</html> 

@@ -6,33 +6,71 @@ let samplePath = [
   'src/sf/schnarchen.mp3',
   'src/sf/schluerfen.mp3'
 ];
+let searchSoundPath = 'src/sf/schnarchen.mp3';
+let searchSound;
 let samples = [];
 let counter = 0;
+let loadText;
 
 function preload() {
   samplePath.forEach(function(path) {
     samples.push(loadSound(path));
   });
+  searchSound = loadSound(searchSoundPath);
 }
 
 function setup() {
-    createCanvas(600, 600);
-    setupMaze();
+    let cloudSize;
+    let useWidth;
+    let useHeight;
+    if (fixedSize) { // fuer groesse Displaysv
+        useWidth = 800;
+        useHeight = 800;
+        widthOfWay = 70;
+        cloudSize = 90;
+        // mazeOffset = 100;
+    } else {
+        useWidth = displayWidth;
+        useHeight = displayHeight * (3/4);
+        // mazeOffset = displayHeight * (1/4);
+        widthOfWay = 50;
+        cloudSize = 30;
+    };  
+    createCanvas(useWidth, useHeight);
 
-   
-  //createCanvas(displayWidth, displayHeight * 2 / 3); // noch je nach bildschirmgroesse anpassen
-  noStroke();
-  angleMode(DEGREES); // 
-  figur = new Player(20, 20); // startposition angeben
-  clouds.push(new SoundCloud(550, 350, 100, samples[0])); // position x y, size und sample
-  clouds.push(new SoundCloud(250, 150, 100, samples[1]));
+    button = createButton('sound abspielen');
+    button.position(0,50, 65);
+
+  button.mousePressed(playSearchSound);
+
+    // translate(0, -useHeight * 1/3);
+    textSize(16);
+    textFont('Georgia');  
+
+    setupMaze();
+    noStroke();
+    angleMode(DEGREES); // 
+    figur = new Player(20, 20 + mazeOffset); // startposition angeben
+    clouds.push(new SoundCloud((useWidth * 0.5) + (useWidth * 0.45 * random()), (useHeight * 0.45 * random()) + mazeOffset, cloudSize, samples[0])); // position x y, size und sample
+    clouds.push(new SoundCloud((useWidth * 0.45 * random()), (useHeight * 0.5) + (useHeight * 0.25 * random()) + mazeOffset, cloudSize, samples[1]));
 }
 
-function draw() {
-  
+function playSearchSound () {
+  searchSound.play();
+}
+
+function showText(inText) {
+  fill(0);
+  strokeWeight(0);
+  loadText = text(inText, 0, 16);
+}
+
+function draw() {  
+  background(255);
   drawMaze();
+
 // background(250,250,250);
-  if (mazeFinished){
+  if (mazeFinished){    
     strokeWeight(0);
     figur.display();
     posFigur = figur.getPos();
@@ -47,15 +85,18 @@ function draw() {
     }
 
     counter += 10;
-  };
+    showText('finished \n Suchen Sie im Labyrinth den folgenden Sound:');
+  } else {
+    showText("loading maze... \n Suchen Sie im Labyrinth den folgenden Sound:");
+  }
 }
 
 class Player {
   constructor(tempX, tempY) {
     this.xpos = tempX;
     this.ypos = tempY;
-    this.ballSize = 20;
-    this.ballW = 12; //(ballSize / 2) + 1;
+    this.ballSize = 24; /// 20
+    this.ballW = 14; //(ballSize / 2) + 1; 12
     this.moveSpeed = 8;
     this.color = color(204, 102, 0);
   }
