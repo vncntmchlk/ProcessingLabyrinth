@@ -4,7 +4,7 @@ let grid = [];
 let current;
 let stack = [];
 let mazeFinished = false;
-let mazeOffset = 100;
+let mazeOffset = 0;//130;
 
 function setupMaze () {
     cols = floor(width / widthOfWay);
@@ -17,6 +17,7 @@ function setupMaze () {
       }
     }
     current = grid[0];
+    return [cols, rows]
 };
 
 function drawMaze () {

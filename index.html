@@ -6,8 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ProcessingLabyrinth</title>
   <style>
+        /* For mobile phones: */
+    .padLab {padding: 0}
+    .einleitung {width: 95%;}
+    @media only screen and (min-width: 800px) {
+      /* For desktop: */
+      .padLab {padding: 0.5rem}
+      .einleitung {width: 800px}
+    }
     body {
-      padding: 0;
+      background-color: teal;
+      /* padding: 0; */
       margin: 0;
     }
   </style>
@@ -31,6 +40,13 @@
 </head>
 
 <body> 
+  <p class='einleitung' style="margin: 0.3rem; padding: 0.2rem; border-style: solid; border-color: black; background-color: rgb(61, 131, 131);color:white">
+    Höre dir die verlorene Musik an. Aber Vorsicht: Einmal gespielt, ist sie verloren und sie muss im Labyrinth wieder gefunden werden. 
+    Also höre aufmerksam zu und merke sie dir gut! Wenn du glaubst die Musik im Labyrinth wiedergefunden zu haben, klicke auf gefunden.
+  </p>
+  <div class='padLab' id="buttonPos">
+  </div>
+  <div class='padLab' id="sketch-holder" style="user-select: none;pointer-events: none;"></div>
 </body>
 
 </html> 
