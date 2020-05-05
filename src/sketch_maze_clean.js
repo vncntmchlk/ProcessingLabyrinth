@@ -196,7 +196,7 @@ function checkFound () {
           sample.stop();
         });
       }
-      lives = 0;
+      lives = 1;
     }
   }
 }
