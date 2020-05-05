@@ -151,7 +151,7 @@ function playSearchSound () {
   searchSound.play();
   foundText.show();
   setTimeout(startGame, searchSoundDuration * 1000);
-  startGame();
+  //startGame();
 }
 
 function startGame () {
