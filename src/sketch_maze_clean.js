@@ -1,3 +1,10 @@
+
+// ToDo
+// waere gut zu verhindern dass nicht zweimal der selbe sound gesucht werden muss!
+// bei den levels unterschiedlich viele sounds im labyrinth
+// bisschen aufraumen hier
+// sfs schneiden und evtl neue mit rein
+
 let figur; 
 let posFigur = [];
 let clouds = [];
@@ -45,9 +52,6 @@ let PlayerStartPos;
 let ballSize;
 let ballW;
 let ballSpeed;
-
-// ToDo
-// waere gut zu verhindern dass nicht zweimal der selbe sound gesucht werden muss!
 
 function preload() {
   searchSoundPath = random(samplePath);
@@ -131,7 +135,7 @@ function setup() {
 
 function setupClouds (newDim) {
   let numOfCells = newDim[0] * newDim[1];
-  let fillArr = Array.from({length: (numOfCells - 0)}, (v,i) => i + 0); // die ersten beiden zellen auslassen
+  let fillArr = Array.from({length: (numOfCells - 2)}, (v,i) => i + 2); // die ersten beiden zellen auslassen
   for(let i = 0; i < 8; i++){
     let indx = floor(fillArr.length * random());
     let removedItem = fillArr.splice(indx,1);
