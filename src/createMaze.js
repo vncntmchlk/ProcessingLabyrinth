@@ -1,10 +1,3 @@
-let cols, rows;
-let widthOfWay; // wie breit der Weg ist  
-let grid = [];
-let current;
-let stack = [];
-let mazeFinished = false;
-let mazeOffset = 0;//130;
 
 function setupMaze () {
     cols = floor(width / widthOfWay);
@@ -82,7 +75,6 @@ function Cell(i, j) {
     this.j = j;
     this.walls = [true, true, true, true];
     this.visited = false;
-    this.sackGasse = false;
 
     this.checkNeighbors = function() {
         let neighbors = [];
@@ -105,15 +97,8 @@ function Cell(i, j) {
         neighbors.push(left);
         }
 
-        //console.log(neighbors.length);
-        
         if (neighbors.length > 0) {
         let r = floor(random(0, neighbors.length));
-        if(neighbors.length == 3){
-            this.sackGasse = true;
-        } else {
-            this.sackGasse = false;
-        }
         return neighbors[r];
         } else {
         return undefined;
@@ -137,8 +122,5 @@ function Cell(i, j) {
         if (this.walls[3]) {
         line(x, y + widthOfWay, x, y);
         };
-    //   if(this.sackGasse){
-    //     ellipse(x,y,50,50);
-    //   }
     };
 }

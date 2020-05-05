@@ -15,6 +15,7 @@ let samplePath = [
 ];
 let searchSoundPath;
 let searchSound;
+let searchSoundDuration;
 let samples = [];
 let counter = 0;
 let button;
@@ -24,10 +25,33 @@ let nowPlayingFile = undefined;
 let foundText;
 let loadLabText;
 let lives = 1;
+let levelCounter = 1;
+let mazeFreeze = false;
+
+let cols, rows;
+let widthOfWay; // wie breit der Weg ist  
+let grid = [];
+let current;
+let stack = [];
+let mazeFinished = false;
+let mazeOffset = 0;//130;
+let startWidth; 
+
+let cloudSize;
+let useWidth;
+let useHeight;
+let canvas;
+let PlayerStartPos;
+let ballSize;
+let ballW;
+let ballSpeed;
+
+// ToDo
+// waere gut zu verhindern dass nicht zweimal der selbe sound gesucht werden muss!
 
 function preload() {
   searchSoundPath = random(samplePath);
-  shuffle(samplePath);
+  // shuffle(samplePath);
   searchSound = loadSound(searchSoundPath);
   samplePath.forEach(function(path) {
     samples.push(loadSound(path));
@@ -38,19 +62,10 @@ function preload() {
 // button fuer gefunden
 
 function setup() {
-    let cloudSize;
-    let useWidth;
-    let useHeight;
-    let canvas;
-    let PlayerStartPos;
-    let ballSize;
-    let ballW;
-    let ballSpeed;
     if (fixedSize) { // fuer groesse Displaysv
         useWidth = 800;
         useHeight = 800;
-        widthOfWay = 70;
-        cloudSize = 90;
+        startWidth = 70;  
         PlayerStartPos = 30;
         wallSize = 15;
         ballSize = 24;
@@ -61,14 +76,16 @@ function setup() {
         useWidth = displayWidth;
         useHeight = displayHeight * (7/12);
         // mazeOffset = displayHeight * (1/4);
-        widthOfWay = useWidth * 0.11;
-        cloudSize = widthOfWay * 1.3;
+        startWidth = useWidth * 0.11;
         PlayerStartPos = 20;
         wallSize = 12;
         ballSize = 20;
         ballW = 12;
         ballSpeed = 9;
     };  
+
+    widthOfWay = startWidth;
+    cloudSize = widthOfWay * 0.95;
 
     let elt = document.getElementById('buttonPos');
 
@@ -80,14 +97,25 @@ function setup() {
     button = createButton('verlorene Musik einmal hören');
     button.parent(elt); // use element from page
     button.mousePressed(playSearchSound);
-    loadLabText = createP(' Labyrinth wird generiert ...');//.addClass('text').hide();
+    searchSoundDuration = searchSound.duration();
+    loadLabText = createP(` Labyrinth Level ${levelCounter} wird generiert ... `);//.addClass('text').hide();
     loadLabText.parent(elt);
     loadLabText.style('color:red;');
 
-    foundText = createP('Wird abgespielt ... ');
+    foundText = createP(`Wird abgespielt ... (${searchSoundDuration} Sekunden) `); //searchSound.duration()
     foundText.parent(elt);
     foundText.style('color:white;');
     foundText.hide();
+
+    buttonReset = createButton('Neue Runde starten');
+    buttonReset.parent(elt); // use element from page
+    buttonReset.mousePressed(resetMaze);
+    buttonReset.hide();
+
+    buttonNext = createButton('Nächstes Level');
+    buttonNext.parent(elt); // use element from page
+    buttonNext.mousePressed(resetMaze);
+    buttonNext.hide();
 
     canvas = createCanvas(useWidth, useHeight);
     canvas.parent('sketch-holder');
@@ -97,38 +125,36 @@ function setup() {
 
     noStroke();
     angleMode(DEGREES); // 
-    figur = new Player(PlayerStartPos, PlayerStartPos + mazeOffset, ballSize, ballW, ballSpeed); // startposition angeben
+    figur = new Player(PlayerStartPos, PlayerStartPos, ballSize, ballW, ballSpeed); // startposition angeben
+    setupClouds(newDim);
+}
 
-    // anzahl der sf muss ganzzahlige root haben
-    let gap = sqrt((useHeight * useWidth) / 8); // 3 * 3 feld
-    let sampleCounter = 0;
-   
-
-    for (let y = 0; y < useHeight; y += gap) {
-      for (let x = 0; x < useWidth; x += gap) {
-        // clouds.push(new SoundCloud(x, y, cloudSize, samples[sampleCounter]));
-        if(sampleCounter > 0){
-          clouds.push(new SoundCloud(x + (gap * random() * 0.6), y + (gap * random() * 0.6), cloudSize, samples[sampleCounter]));
-        };
-        sampleCounter = (sampleCounter + 1) % 8
-      }
-    };
-
-    // clouds.push(new SoundCloud((useWidth * 0.5) + (useWidth * 0.45 * random()), (useHeight * 0.45 * random()) + mazeOffset, cloudSize, samples[0])); 
-    // clouds.push(new SoundCloud((useWidth * 0.45 * random()), (useHeight * 0.5) + (useHeight * 0.25 * random()) + mazeOffset, cloudSize, samples[1]));
+function setupClouds (newDim) {
+  let numOfCells = newDim[0] * newDim[1];
+  let fillArr = Array.from({length: (numOfCells - 0)}, (v,i) => i + 0); // die ersten beiden zellen auslassen
+  for(let i = 0; i < 8; i++){
+    let indx = floor(fillArr.length * random());
+    let removedItem = fillArr.splice(indx,1);
+    let cellNum = removedItem[0];
+    let cellMod = cellNum % newDim[1];
+    let x = (((cellNum - cellMod) / newDim[1])) * widthOfWay;
+    let y = cellMod * widthOfWay;
+    clouds.push(new SoundCloud(x + (widthOfWay * 0.5), y + (widthOfWay * 0.5), cloudSize * (1 + (0.2 * random())), samples[i])); // 0.2
+  };
 }
 
 function playSearchSound () {
   searchSound.play();
   foundText.show();
-  setTimeout(startGame, searchSound.duration() * 1000);
-  // startGame();
+  setTimeout(startGame, searchSoundDuration * 1000);
+  startGame();
 }
 
 function startGame () {
   button.hide();
   buttonFound.show();
   soundPlayed = true;
+  mazeFreeze = false;
   foundText.html(' Die Suche beginnt ...')
   setTimeout(weg, 3000);
 }
@@ -140,32 +166,73 @@ function weg () {
 function checkFound () {
   foundText.show();
   if(searchSoundPath == nowPlayingFile){
-    foundText.html('  gefunden!');
+    foundText.html(`  gefunden! Level ${levelCounter} geschafft!`);
+    levelCounter ++;
+    mazeFreeze = true;
+    buttonFound.hide();
+    buttonNext.show();
+    samples.forEach(function(sample) {
+      sample.stop();
+    });
   } else {
     if(nowPlayingFile == undefined){
       foundText.html(' bewege dich zuerst über eine Klangwolke');
+      setTimeout(weg, 3000);
     } else {
       if(lives==1){
         foundText.html(' das wars noch nicht! 1 Versuch übrig');
+        setTimeout(weg, 3000);
       } else {
-        foundText.html(' leider falsch! Spiel verloren');
+        foundText.html(' leider falsch! Neue Runde?');
+        levelCounter = 1; // zurueck zu level 1
+        mazeFreeze = true;
         buttonFound.hide();
+        buttonReset.show();
+        samples.forEach(function(sample) {
+          sample.stop();
+        });
       }
       lives = 0;
     }
   }
-  setTimeout(weg, 3000);
+}
+
+function resetMaze () {
+  frameRate(60);
+  searchSoundPath = random(samplePath);
+  searchSound = loadSound(searchSoundPath);
+  grid = [];
+  stack = [];
+  mazeFinished = false;
+  widthOfWay = int(startWidth - (startWidth * ((levelCounter - 1) / 6)));
+  cloudSize = widthOfWay * 0.95;
+  let newDim = setupMaze();
+  resizeCanvas(newDim[0] * widthOfWay, newDim[1] * widthOfWay); // die haesslichen weissen streifen entfernen
+  clouds = [];
+  lives = 1;
+  setupClouds(newDim);
+  figur.resetPos(PlayerStartPos, PlayerStartPos);
+  button.show();
+  loadLabText.html(` Labyrinth Level ${levelCounter} wird generiert ... `);
+  loadLabText.show();
+  buttonFound.hide();
+  buttonReset.hide();
+  foundText.hide();
+  buttonNext.hide();
+  soundPlayed = false;
+  if (searchSound.isPlaying()) {
+    searchSound.pause();
+  };
+  // setTimeout(weg, 3000);
 }
 
 function draw() {  
   background(255);
   drawMaze();
 
-// background(250,250,250);
   if (mazeFinished){    
-
     loadLabText.hide();
-    if(soundPlayed){
+    if(soundPlayed && !mazeFreeze){
       strokeWeight(0);
       figur.display();
       posFigur = figur.getPos();
@@ -177,11 +244,9 @@ function draw() {
 
       if(mouseIsPressed){
         figur.checkAngleAndMove();
-      }
-
+      };
       counter += 10;
-  };
-
+    };
   }
 }
 
@@ -193,6 +258,11 @@ class Player {
     this.ballW = ballW; //(ballSize / 2) + 1; 14
     this.moveSpeed = ballSpeed; //
     this.color = color(204, 102, 0);
+  }
+
+  resetPos(newX, newY){
+    this.xpos = newX;
+    this.ypos = newY;
   }
 
   checkAngleAndMove(){
@@ -246,26 +316,28 @@ class SoundCloud {
     this.distanceToFig = 0;
     this.sample = sample;
     this.cloudSeed = random();
-    this.color = color(0, random() * 80, random() * 80, 150); // der erste wert muss 0 bleiben, damit kein glitch durch die wand passiert
+    this.color = color(0, random() * 80, random() * 80, 200); // der erste wert muss 0 bleiben, damit kein glitch durch die wand passiert
+    this.shapeRand1 = 30 + (10 * random());
+    this.shapeMove = 5 + (15 * random());
   }
 
   display (){
     //stroke(100, 100);
     fill(this.color);
     translate(this.xpos, this.ypos);
-    let newSize = this.cloudSize / 4; // den teilwert kann man ermitteln indem man die ellipse dazu schaltet
+    let newSize = this.cloudSize / 8; // den teilwert kann man ermitteln indem man die ellipse dazu schaltet
     let angle = counter;
     beginShape();
     for (let a = 0; a < 360; a+=15) {
-      let offset = sin(angle) * (2 + this.cloudSeed) + 60 * noise(a * (0.03  + this.cloudSeed));
+      let offset = sin(angle) * (2 + this.cloudSeed) + this.shapeRand1 * noise(a * (0.03  + this.cloudSeed));
       let x = (newSize + offset) * cos(a);
       let y = (newSize + offset) * sin(a);
       curveVertex(x, y);
-      angle += 13;
+      angle += this.shapeMove;
     }
     endShape(CLOSE);
     translate(-this.xpos, -this.ypos);
-    ellipse(this.xpos, this.ypos, this.cloudSize, this.cloudSize); 
+    //ellipse(this.xpos, this.ypos, this.cloudSize, this.cloudSize); 
   }
 
   onOffSound (){
