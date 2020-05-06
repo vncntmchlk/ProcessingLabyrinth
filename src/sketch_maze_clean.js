@@ -54,6 +54,8 @@ let samplePathAll = [
   // 'src/gsg_soundfiles/gsg8.mp3'
   //'src/gsg_soundfiles/gsg9.mp3'
 ];
+let choosenSamples;
+let choosenSearchSound;
 let samplePath = [];
 let searchSoundPath;
 let searchSound;
@@ -93,37 +95,26 @@ let allFilesLoaded = 0;
 let allLoaded = false;
 let numOfClouds = 4;
 
-function preload() {
-  loadRandomSamples();
+function preload() { // alle samples laden
+  samplePathAll.forEach(function(sample) {
+    samples.push(loadSound(sample));
+  });
+  chooseRandomSamples();
 }
 
-function loadRandomSamples () {
+function chooseRandomSamples () {
   let i = 0;
-  samples = [];
-  samplePath = [];
+  choosenSamples = [];
+  chooseArr = Array.from({length: samplePathAll.length}, (v,i) => i);
   while (i < numOfClouds){
-    let newSamp = random(samplePathAll);
-    let containsNewSamp = samplePath.find( e => e === newSamp );
-    if (containsNewSamp == undefined) {
-      samplePath.push(newSamp);
-      samples.push(loadSound(newSamp, countLoadFiles));
-      i++
-    };
+    choosenSamples.push(chooseArr.splice(random() * chooseArr.length, 1));
+    i++
   };
-  searchSoundPath = random(samplePath);
-  while(searchSoundPath == lastSearchSound){
-    searchSoundPath = random(samplePath);
+  choosenSearchSound = random(choosenSamples);
+  while(choosenSearchSound == lastSearchSound){
+    choosenSearchSound = random(choosenSamples);
   };
-  searchSound = loadSound(searchSoundPath);
 }
-
-function countLoadFiles () {
-  allFilesLoaded++
-  if(allFilesLoaded == numOfClouds){
-    allLoaded = true;
-  }
-}
-
 
 function setup() {
     if (fixedSize) { // fuer groesse Displaysv
@@ -162,7 +153,7 @@ function setup() {
     button = createButton('verlorene Musik einmal hören');
     button.parent(elt); // use element from page
     button.mousePressed(playSearchSound);
-    searchSoundDuration = int(searchSound.duration());
+    searchSoundDuration = int(samples[choosenSearchSound].duration());
     loadLabText = createP(` Labyrinth Level ${levelCounter} wird generiert ... `);//.addClass('text').hide();
     loadLabText.parent(elt);
     loadLabText.style('color:red;');
@@ -181,11 +172,6 @@ function setup() {
     buttonNext.parent(elt); // use element from page
     buttonNext.mousePressed(resetMaze);
     buttonNext.hide();
-
-    loadNewText = createP('Neue Soundfiles laden ...');
-    loadNewText.parent(elt);
-    loadNewText.style('color:white;');
-    loadNewText.hide();
 
     canvas = createCanvas(useWidth, useHeight);
     canvas.parent('sketch-holder');
@@ -209,13 +195,13 @@ function setupClouds (newDim) {
     let cellMod = cellNum % newDim[1];
     let x = (((cellNum - cellMod) / newDim[1])) * widthOfWay;
     let y = cellMod * widthOfWay;
-    clouds.push(new SoundCloud(x + (widthOfWay * 0.5), y + (widthOfWay * 0.5), cloudSize * (1 + (0.2 * random())), samples[i])); // 0.2
+    clouds.push(new SoundCloud(x + (widthOfWay * 0.5), y + (widthOfWay * 0.5), cloudSize * (1 + (0.2 * random())), choosenSamples[i])); // 0.2
   };
 }
 
 function playSearchSound () {
-  searchSound.play();
-  searchSoundDuration = int(searchSound.duration());
+  samples[choosenSearchSound].play();
+  searchSoundDuration = int(samples[choosenSearchSound].duration());
   foundText.html(`Wird abgespielt ... (${searchSoundDuration} Sekunden) `);
   foundText.show();
   button.hide();
@@ -240,7 +226,7 @@ function weg () {
 function checkFound () {
   foundText.show();
   // console.log(nowPlayingFile);
-  if(searchSoundPath == nowPlayingFile){
+  if(choosenSearchSound == nowPlayingFile){
     if (levelCounter == 5){
       foundText.html('Gratuliere! Du hast alle Level bewältigt!');
       levelCounter = 1; // zurueck zu level 1
@@ -256,9 +242,8 @@ function checkFound () {
     buttonFound.hide();
     samples.forEach(function(sample) {
       sample.stop();
-      sample.dispose(); // funktioniert ?
     });
-    lastSearchSound = searchSoundPath;
+    lastSearchSound = choosenSearchSound;
   } else {
     if(nowPlayingFile == undefined){
       foundText.html(' Bewege dich zuerst über eine Klangwolke');
@@ -277,48 +262,19 @@ function checkFound () {
         buttonReset.show();
         samples.forEach(function(sample) {
           sample.stop();
-          sample.dispose(); // funktioniert ?
         });
-        lastSearchSound = searchSoundPath;
+        lastSearchSound = choosenSearchSound;
       }
     }
   }
 }
 
-function resetMaze() {
-  allFilesLoaded = 0; 
-  allLoaded = false;
+function resetMaze () {
+  frameRate(60);
+  chooseRandomSamples();
   buttonFound.hide();
   buttonReset.hide();
   buttonNext.hide();
-  loadRandomSamples();
-  if(allLoaded) {
-    resetMazeDo();
-    loadNewText.hide();
-  } else {
-    setTimeout(waitMaze, 250);
-    loadNewText.show();
-  }
-}
-
-function waitMaze() {
-  if(allLoaded) {
-    resetMazeDo();
-    loadNewText.hide();
-  } else {
-    setTimeout(waitMaze, 250);
-  }
-}
-
-function resetMazeDo () {
-  allFilesLoaded = 0; // zuruecksetzen
-  allLoaded = false;
-  frameRate(60);
-  // searchSoundPath = random(samplePath);
-  // while(searchSoundPath == lastSearchSound){
-  //   searchSoundPath = random(samplePath);
-  // };
-  // searchSound = loadSound(searchSoundPath);
   grid = [];
   stack = [];
   mazeFinished = false;
@@ -338,15 +294,14 @@ function resetMazeDo () {
   loadLabText.show();
   foundText.hide();
   soundPlayed = false;
-  if (searchSound.isPlaying()) {
-    searchSound.pause();
+  if (samples[choosenSearchSound].isPlaying()) {
+    samples[choosenSearchSound].stop();
   };
 }
 
 function draw() {  
   background(255);
   drawMaze();
-
   if (mazeFinished){    
     loadLabText.hide();
     if(soundPlayed && !mazeFreeze){
@@ -461,17 +416,17 @@ class SoundCloud {
     this.distanceToFig = dist(this.xpos, this.ypos, posFigur[0], posFigur[1]); //posFigur ist global, da es nur eine gibt
     this.inside = map(this.distanceToFig, this.cloudSize * 0.5, 0, 0, 1);
     if (this.inside < 0) { 
-      if (this.sample.isPlaying()) {
-        this.sample.pause();
-        if(nowPlayingFile == this.sample.file){
+      if (samples[this.sample].isPlaying()) {
+        samples[this.sample].pause();
+        if(nowPlayingFile == choosenSearchSound){
           nowPlayingFile = undefined; // die clouds sollen nur ihr eigenes ding zuruecksetzen
         }
       }
     } else {
-      if (this.sample.isPlaying() == false) {
-        this.sample.loop();
+      if (samples[this.sample].isPlaying() == false) {
+        samples[this.sample].loop();
       }
-      nowPlayingFile = this.sample.file;
+      nowPlayingFile = this.sample;
     }
   }
 }
