@@ -324,6 +324,7 @@ function resetMazeDo () {
   mazeFinished = false;
   widthOfWay = int(startWidth - (startWidth * ((levelCounter - 1) / 9)));
   cloudSize = widthOfWay * 0.95;
+  resizeCanvas(useWidth, useHeight); // damit es nicht immer kleiner wird
   let newDim = setupMaze();
   resizeCanvas(newDim[0] * widthOfWay, newDim[1] * widthOfWay); // die haesslichen weissen streifen entfernen
   clouds = [];
