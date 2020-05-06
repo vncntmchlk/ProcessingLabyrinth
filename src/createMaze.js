@@ -1,3 +1,4 @@
+/* code von https://github.com/CodingTrain/website/tree/master/CodingChallenges/CC_010_Maze_DFS/P5 wurde hier verarbeitet*/
 
 function setupMaze () {
     cols = floor(width / widthOfWay);
