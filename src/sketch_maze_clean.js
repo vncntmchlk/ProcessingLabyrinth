@@ -68,7 +68,7 @@ let nowPlayingFile = undefined;
 let foundText;
 let loadLabText;
 let lives = 1;
-let levelCounter = 4;
+let levelCounter = 1;
 let mazeFreeze = false;
 
 let cols, rows;
