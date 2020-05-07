@@ -1,18 +1,3 @@
-
-// ToDo
-
-// wenn man falsch liegt und auf nochmal abspielen geht ist irgendwas schief
-
-// bei den levels unterschiedlich viele sounds im labyrinth
-// bisschen aufraumen hier
-
-//tobi stuff
-// - Die Sekundendauer des Ausiofiles wird nach Level 1 nicht mehr angezeigt
-// - Ich würde den Punkt mit den Leveln auch verkleiner. Level 5 kann man schon nicht mehr spielen, weil der fest steckt.
-// - einmal wurde eine Musik gespielt, als das nächste Level generiert wurde. Da hatte ich aber auch ganz schnell gespielt und die Anfangsmusik nicht abgewartet.
-// - vielleicht wäre es cool, wenn man in einem späteren Level nicht wieder die Musik suchen muss, die man schonmal gesucht hat. Aber die Wahrscheinligkeit verringert sich ja eh bei mehr Audios
-
-
 let figur; 
 let posFigur = [];
 let clouds = [];
@@ -44,15 +29,6 @@ let samplePathAll = [
   "src/sf/sample_23.mp3",
   "src/sf/sample_24.mp3",
   "src/sf/sample_25.mp3"
-  // 'src/gsg_soundfiles/gsg1.mp3',
-  // 'src/gsg_soundfiles/gsg2.mp3',
-  // 'src/gsg_soundfiles/gsg3.mp3',
-  // 'src/gsg_soundfiles/gsg4.mp3',
-  // 'src/gsg_soundfiles/gsg5.mp3',
-  // 'src/gsg_soundfiles/gsg6.mp3',
-  // 'src/gsg_soundfiles/gsg7.mp3',
-  // 'src/gsg_soundfiles/gsg8.mp3'
-  //'src/gsg_soundfiles/gsg9.mp3'
 ];
 let choosenSamples;
 let choosenSearchSound;
@@ -81,6 +57,12 @@ let stack = [];
 let mazeFinished = false;
 let mazeOffset = 0;//130;
 let startWidth; 
+let onceRemoved;
+let mazeSetupComplete = false;
+let pg;
+let rendered = false;
+let newDim;
+let oldGrid = [];
 
 let cloudSize;
 let useWidth;
@@ -91,9 +73,8 @@ let ballSize;
 let ballW;
 let ballSpeed;
 let startBallSize;
-let allFilesLoaded = 0;
-let allLoaded = false;
-let numOfClouds = 4;
+let numOfClouds = 5;
+let cloudPGs;
 
 function preload() { // alle samples laden
   samplePathAll.forEach(function(sample) {
@@ -120,16 +101,14 @@ function setup() {
     if (fixedSize) { // fuer groesse Displaysv
         useWidth = 800;
         useHeight = 800;
-        startWidth = 100 //70;  
+        startWidth = 100;//100;
         PlayerStartPos = 30;
         wallSize = 15;
         startBallSize = 24;
         ballSpeed = 10;
-        // mazeOffset = 100;
     } else {
         useWidth = displayWidth;
         useHeight = displayHeight * (7/12);
-        // mazeOffset = displayHeight * (1/4);
         startWidth = useWidth * 0.13;//* 0.11;
         PlayerStartPos = 20;
         wallSize = 12;
@@ -176,7 +155,7 @@ function setup() {
     canvas = createCanvas(useWidth, useHeight);
     canvas.parent('sketch-holder');
 
-    let newDim = setupMaze();
+    setupMaze();
     resizeCanvas(newDim[0] * widthOfWay, newDim[1] * widthOfWay); // die haesslichen weissen streifen entfernen
 
     noStroke();
@@ -188,14 +167,18 @@ function setup() {
 function setupClouds (newDim) {
   let numOfCells = newDim[0] * newDim[1];
   let fillArr = Array.from({length: (numOfCells - 2)}, (v,i) => i + 2); // die ersten beiden zellen auslassen
+  cloudPGs = [];
+  for(i = 0; i < numOfClouds; i++){
+    cloudPGs.push(createGraphics(widthOfWay, widthOfWay))
+  };
   for(let i = 0; i < numOfClouds; i++){
     let indx = floor(fillArr.length * random());
     let removedItem = fillArr.splice(indx,1);
     let cellNum = removedItem[0];
     let cellMod = cellNum % newDim[1];
-    let x = (((cellNum - cellMod) / newDim[1])) * widthOfWay;
-    let y = cellMod * widthOfWay;
-    clouds.push(new SoundCloud(x + (widthOfWay * 0.5), y + (widthOfWay * 0.5), cloudSize * (1 + (0.2 * random())), choosenSamples[i])); // 0.2
+    let x = (((cellNum - cellMod) / newDim[1]));
+    let y = cellMod ;
+    clouds.push(new SoundCloud(x * widthOfWay, y * widthOfWay, cloudSize, choosenSamples[i], i, [x, y])); // 0.2
   };
 }
 
@@ -206,7 +189,6 @@ function playSearchSound () {
   foundText.show();
   button.hide();
   setTimeout(startGame, searchSoundDuration * 1000);
-  //startGame();
 }
 
 function startGame () {
@@ -225,7 +207,6 @@ function weg () {
 
 function checkFound () {
   foundText.show();
-  // console.log(nowPlayingFile);
   if(choosenSearchSound == nowPlayingFile){
     if (levelCounter == 5){
       foundText.html('Gratuliere! Du hast alle Level bewältigt!');
@@ -270,7 +251,8 @@ function checkFound () {
 }
 
 function resetMaze () {
-  frameRate(60);
+  mazeSetupComplete = false;
+  frameRate(60); // fuer labyrinth generierung hochsetzen
   chooseRandomSamples();
   buttonFound.hide();
   buttonReset.hide();
@@ -281,7 +263,7 @@ function resetMaze () {
   widthOfWay = int(startWidth - (startWidth * ((levelCounter - 1) / 9)));
   cloudSize = widthOfWay * 0.95;
   resizeCanvas(useWidth, useHeight); // damit es nicht immer kleiner wird
-  let newDim = setupMaze();
+  setupMaze();
   resizeCanvas(newDim[0] * widthOfWay, newDim[1] * widthOfWay); // die haesslichen weissen streifen entfernen
   clouds = [];
   lives = 1;
@@ -301,17 +283,23 @@ function resetMaze () {
 
 function draw() {  
   background(255);
-  drawMaze();
+  if(mazeSetupComplete){
+    drawMaze();
+  };
   if (mazeFinished){    
     loadLabText.hide();
     if(soundPlayed && !mazeFreeze){
-      strokeWeight(0);
       figur.display();
-      posFigur = figur.getPos();
+      let newGrid = figur.getGrid();
 
+      if(newGrid[0] != oldGrid[0] || newGrid[1] != oldGrid[1]){
+        clouds.forEach(function(cloud) {
+          cloud.onOffSound(newGrid);
+        });
+      }
+      oldGrid = newGrid;  
       clouds.forEach(function(cloud) {
         cloud.display();
-        cloud.onOffSound();
       });
 
       if(mouseIsPressed){
@@ -377,10 +365,17 @@ class Player {
     let results = [this.xpos, this.ypos];
     return results;
   }
+
+  getGrid() {
+    let results = [floor(this.xpos / widthOfWay), floor(this.ypos / widthOfWay)];
+    return results;
+  }
 }
 
+
+
 class SoundCloud {
-  constructor(posX, posY, size, sample) {
+  constructor(posX, posY, size, sample, cindex, myGrid) {
     this.xpos = posX;
     this.ypos = posY;
     this.cloudSize = size;
@@ -391,31 +386,39 @@ class SoundCloud {
     this.color = color(0, random() * 80, random() * 80, 200); // der erste wert muss 0 bleiben, damit kein glitch durch die wand passiert
     this.shapeRand1 = 30 + (10 * random());
     this.shapeMove = 5 + (15 * random());
+    this.cindex = cindex;
+    this.rendered = false;
+    this.grid = myGrid;
   }
 
-  display (){
-    //stroke(100, 100);
-    fill(this.color);
-    translate(this.xpos, this.ypos);
+  render (){
+    let cl = cloudPGs[this.cindex];
+    cl.noStroke();
+    cl.fill(this.color);
     let newSize = this.cloudSize / 8; // den teilwert kann man ermitteln indem man die ellipse dazu schaltet
     let angle = counter;
-    beginShape();
+    cl.beginShape();
     for (let a = 0; a < 360; a+=15) {
-      let offset = sin(angle) * (2 + this.cloudSeed) + this.shapeRand1 * noise(a * (0.03  + this.cloudSeed));
+      let offset = sin(30) * (2 + this.cloudSeed) + this.shapeRand1 * noise(a * (0.03  + this.cloudSeed));
       let x = (newSize + offset) * cos(a);
       let y = (newSize + offset) * sin(a);
-      curveVertex(x, y);
+      curveVertex(x + (cl.width / 2), y + (cl.height / 2));
       angle += this.shapeMove;
     }
-    endShape(CLOSE);
-    translate(-this.xpos, -this.ypos);
-    //ellipse(this.xpos, this.ypos, this.cloudSize, this.cloudSize); 
+    cl.endShape(CLOSE);
   }
 
-  onOffSound (){
-    this.distanceToFig = dist(this.xpos, this.ypos, posFigur[0], posFigur[1]); //posFigur ist global, da es nur eine gibt
-    this.inside = map(this.distanceToFig, this.cloudSize * 0.5, 0, 0, 1);
-    if (this.inside < 0) { 
+  display () {
+    if(!this.rendered){
+      this.render();
+      this.rendered = true;
+    }
+    image(cloudPGs[this.cindex], this.xpos, this.ypos)
+  }
+
+  onOffSound (newGrid){
+    console.log(newGrid, this.grid);
+    if ((newGrid[0] != this.grid[0]) || (newGrid[1] != this.grid[1])) { 
       if (samples[this.sample].isPlaying()) {
         samples[this.sample].pause();
         if(nowPlayingFile == choosenSearchSound){

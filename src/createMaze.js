@@ -11,37 +11,56 @@ function setupMaze () {
       }
     }
     current = grid[0];
-    return [cols, rows]
+    newDim = [cols, rows];
+    mazeSetupComplete = true;
+    rendered = false;
+    pg = createGraphics(useWidth, useHeight);
 };
 
-function drawMaze () {
-    
-    for (let i = 0; i < grid.length; i++) {
-        grid[i].show();
-    }
+function drawMaze () {  
+    if(!mazeFinished){
+        for (let i = 0; i < grid.length; i++) {
+            grid[i].show();
+        };
+        current.visited = true;
+        // STEP 1
+        let next = current.checkNeighbors();
+        if (next) {
+            next.visited = true;
 
-    current.visited = true;
-    // STEP 1
-    let next = current.checkNeighbors();
-    if (next) {
-        next.visited = true;
+            // STEP 2
+            stack.push(current);
 
-        // STEP 2
-        stack.push(current);
+            // STEP 3
+            removeWalls(current, next);
 
-        // STEP 3
-        removeWalls(current, next);
+            onceRemoved = true;
 
-        // STEP 4
-        current = next;
-    } else if (stack.length > 0) {
-        current = stack.pop();
+            // STEP 4
+            current = next;
+        } else if (stack.length > 0) {
+            current = stack.pop();
+            // console.log(stack.length);
+        } else {
+            if(stack.length == 0 && onceRemoved){
+                mazeFinished = true;
+                strokeWeight(0);
+            }
+
+            // console.log(mazeFinished, stack.length, onceRemoved);
+    // soll auf langsamen Geraeten gleich laufen wie auf schnellen.
+    // bei hoeherer Framerate kann es durch cpu belastung langsamer werden
+            frameRate(30);
+        }
     } else {
-        mazeFinished = true;
-
-  // soll auf langsamen Geraeten gleich laufen wie auf schnellen.
-  // bei hoeherer Framerate kann es durch cpu belastung langsamer werden
-        frameRate(16);
+        if(!rendered){
+            for (let i = 0; i < grid.length; i++) {
+                grid[i].render();
+            }
+            rendered = true;
+         }
+        //  console.log(rendered);
+        image(pg, 0, 0);
     }
 }
   
@@ -112,16 +131,34 @@ function Cell(i, j) {
         stroke(0);
         strokeWeight(wallSize);
         if (this.walls[0]) {
-        line(x, y, x + widthOfWay, y);
+             line(x, y, x + widthOfWay, y);
         }
         if (this.walls[1]) {
-        line(x + widthOfWay, y, x + widthOfWay, y + widthOfWay);
+            line(x + widthOfWay, y, x + widthOfWay, y + widthOfWay);
         }
         if (this.walls[2]) {
-        line(x + widthOfWay, y + widthOfWay, x, y + widthOfWay);
+            line(x + widthOfWay, y + widthOfWay, x, y + widthOfWay);
         }
         if (this.walls[3]) {
-        line(x, y + widthOfWay, x, y);
+            line(x, y + widthOfWay, x, y);
+        };
+    };
+    this.render = function() {
+        let x = this.i * widthOfWay;
+        let y = (this.j * widthOfWay) + mazeOffset;
+        pg.stroke(0);
+        pg.strokeWeight(wallSize);
+        if (this.walls[0]) {
+            pg.line(x, y, x + widthOfWay, y);
+        }
+        if (this.walls[1]) {
+            pg.line(x + widthOfWay, y, x + widthOfWay, y + widthOfWay);
+        }
+        if (this.walls[2]) {
+            pg.line(x + widthOfWay, y + widthOfWay, x, y + widthOfWay);
+        }
+        if (this.walls[3]) {
+            pg.line(x, y + widthOfWay, x, y);
         };
     };
 }
