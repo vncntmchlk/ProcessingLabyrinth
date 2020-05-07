@@ -14,7 +14,7 @@ function setupMaze () {
     newDim = [cols, rows];
     mazeSetupComplete = true;
     rendered = false;
-    pg = createGraphics(useWidth, useHeight);
+    pg = createGraphics(useWidth, useHeight, WEBGL);
 };
 
 function drawMaze () {  
