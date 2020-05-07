@@ -169,7 +169,7 @@ function setupClouds (newDim) {
   let fillArr = Array.from({length: (numOfCells - 2)}, (v,i) => i + 2); // die ersten beiden zellen auslassen
   cloudPGs = [];
   for(i = 0; i < numOfClouds; i++){
-    cloudPGs.push(createGraphics(widthOfWay, widthOfWay, WEBGL))
+    cloudPGs.push(createGraphics(widthOfWay, widthOfWay))
   };
   for(let i = 0; i < numOfClouds; i++){
     let indx = floor(fillArr.length * random());
