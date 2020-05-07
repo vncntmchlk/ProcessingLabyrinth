@@ -419,14 +419,14 @@ class SoundCloud {
     // console.log(newGrid, this.grid);
     if ((newGrid[0] != this.grid[0]) || (newGrid[1] != this.grid[1])) { 
       if (samples[this.sample].isPlaying()) {
-        samples[this.sample].pause();
+        samples[this.sample].stop(); //pause
         if(nowPlayingFile == choosenSearchSound){
           nowPlayingFile = undefined; // die clouds sollen nur ihr eigenes ding zuruecksetzen
         }
       }
     } else {
       if (samples[this.sample].isPlaying() == false) {
-        samples[this.sample].loop();
+        samples[this.sample].play(); // loop
       }
       nowPlayingFile = this.sample;
     }
