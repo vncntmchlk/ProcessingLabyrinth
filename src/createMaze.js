@@ -45,12 +45,13 @@ function drawMaze () {
             if(stack.length == 0 && onceRemoved){
                 mazeFinished = true;
                 strokeWeight(0);
+                loadLabText.hide();
             }
 
             // console.log(mazeFinished, stack.length, onceRemoved);
     // soll auf langsamen Geraeten gleich laufen wie auf schnellen.
     // bei hoeherer Framerate kann es durch cpu belastung langsamer werden
-            frameRate(30);
+            frameRate(20);
         }
     } else {
         if(!rendered){

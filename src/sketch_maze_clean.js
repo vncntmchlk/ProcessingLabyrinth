@@ -285,29 +285,29 @@ function draw() {
   background(255);
   if(mazeSetupComplete){
     drawMaze();
-  };
-  if (mazeFinished){    
-    loadLabText.hide();
-    if(soundPlayed && !mazeFreeze){
-      figur.display();
-      let newGrid = figur.getGrid();
-
-      if(newGrid[0] != oldGrid[0] || newGrid[1] != oldGrid[1]){
+    if (mazeFinished){    
+      if(soundPlayed && !mazeFreeze){
+        figur.display();
+        let newGrid = figur.getGrid();
+  
+        if(newGrid[0] != oldGrid[0] || newGrid[1] != oldGrid[1]){
+          clouds.forEach(function(cloud) {
+            cloud.onOffSound(newGrid);
+          });
+        }
+        oldGrid = newGrid;  
         clouds.forEach(function(cloud) {
-          cloud.onOffSound(newGrid);
+          cloud.display();
         });
-      }
-      oldGrid = newGrid;  
-      clouds.forEach(function(cloud) {
-        cloud.display();
-      });
-
-      if(mouseIsPressed){
-        figur.checkAngleAndMove();
+  
+        if(mouseIsPressed){
+          figur.checkAngleAndMove();
+        };
+        counter += 10;
       };
-      counter += 10;
-    };
-  }
+    }
+  };
+
 }
 
 class Player {
@@ -328,21 +328,21 @@ class Player {
   checkAngleAndMove(){
     let dx = mouseX - this.xpos;
     let dy = mouseY - this.ypos;
-    let angle = atan2(dy, dx) + 180;  
+    let angle = Math.atan2(dy, dx) + PI;  
     switch (true) {
-        case (angle > 45 && angle < 135): //oben
+        case (angle > 0.78 && angle < 2.35): //oben
             let upColor = get(int(this.xpos), (int(this.ypos)- this.ballW));
             if(upColor[0] != 0){ //kollision pruefen, nur bei weissen pixeln weiter bewegen
               this.ypos = this.ypos - this.moveSpeed;
             }
             break;
-        case (angle > 135 && angle < 225): //rechts
+        case (angle > 2.35 && angle < 3.92): //rechts
             let rightColor = get((int(this.xpos) + this.ballW), int(this.ypos));  
             if(rightColor[0] != 0){
                 this.xpos = this.xpos + this.moveSpeed;
             }
             break;
-        case (angle > 225 && angle < 315): //unten
+        case (angle > 3.92 && angle < 5.5): //unten
             let downColor = get(int(this.xpos), (int(this.ypos) + this.ballW)); 
             if(downColor[0] != 0){
                 this.ypos = this.ypos + this.moveSpeed;
