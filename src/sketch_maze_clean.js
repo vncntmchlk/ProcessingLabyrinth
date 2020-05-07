@@ -222,7 +222,9 @@ function checkFound () {
     mazeFreeze = true;
     buttonFound.hide();
     samples.forEach(function(sample) {
-      sample.stop();
+      if (sample.isPlaying()) {
+        sample.stop(); //pause
+      }
     });
     lastSearchSound = choosenSearchSound;
   } else {
@@ -242,7 +244,9 @@ function checkFound () {
         buttonFound.hide();
         buttonReset.show();
         samples.forEach(function(sample) {
-          sample.stop();
+          if (sample.isPlaying()) {
+            sample.stop(); //pause
+          }
         });
         lastSearchSound = choosenSearchSound;
       }
@@ -357,6 +361,7 @@ class Player {
   
   display(){
     fill(this.color);
+    strokeWeight(0);
     ellipse(this.xpos, this.ypos, this.ballSize, this.ballSize); 
   }
 

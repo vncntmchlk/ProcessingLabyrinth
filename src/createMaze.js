@@ -13,8 +13,8 @@ function setupMaze () {
     current = grid[0];
     newDim = [cols, rows];
     mazeSetupComplete = true;
-    rendered = false;
-    pg = createGraphics(useWidth, useHeight);
+    //rendered = false;
+    //pg = createGraphics(useWidth, useHeight);
 };
 
 function drawMaze () {  
@@ -54,14 +54,17 @@ function drawMaze () {
             frameRate(20);
         }
     } else {
-        if(!rendered){
-            for (let i = 0; i < grid.length; i++) {
-                grid[i].render();
-            }
-            rendered = true;
-         }
-        //  console.log(rendered);
-        image(pg, 0, 0);
+        // if(!rendered){
+        //     for (let i = 0; i < grid.length; i++) {
+        //         grid[i].render();
+        //     }
+        //     rendered = true;
+        //  }
+        // //  console.log(rendered);
+        // image(pg, 0, 0);
+        for (let i = 0; i < grid.length; i++) {
+            grid[i].show();
+        };
     }
 }
   
@@ -144,22 +147,22 @@ function Cell(i, j) {
             line(x, y + widthOfWay, x, y);
         };
     };
-    this.render = function() {
-        let x = this.i * widthOfWay;
-        let y = (this.j * widthOfWay) + mazeOffset;
-        pg.stroke(0);
-        pg.strokeWeight(wallSize);
-        if (this.walls[0]) {
-            pg.line(x, y, x + widthOfWay, y);
-        }
-        if (this.walls[1]) {
-            pg.line(x + widthOfWay, y, x + widthOfWay, y + widthOfWay);
-        }
-        if (this.walls[2]) {
-            pg.line(x + widthOfWay, y + widthOfWay, x, y + widthOfWay);
-        }
-        if (this.walls[3]) {
-            pg.line(x, y + widthOfWay, x, y);
-        };
-    };
+    // this.render = function() {
+    //     let x = this.i * widthOfWay;
+    //     let y = (this.j * widthOfWay) + mazeOffset;
+    //     pg.stroke(0);
+    //     pg.strokeWeight(wallSize);
+    //     if (this.walls[0]) {
+    //         pg.line(x, y, x + widthOfWay, y);
+    //     }
+    //     if (this.walls[1]) {
+    //         pg.line(x + widthOfWay, y, x + widthOfWay, y + widthOfWay);
+    //     }
+    //     if (this.walls[2]) {
+    //         pg.line(x + widthOfWay, y + widthOfWay, x, y + widthOfWay);
+    //     }
+    //     if (this.walls[3]) {
+    //         pg.line(x, y + widthOfWay, x, y);
+    //     };
+    // };
 }
