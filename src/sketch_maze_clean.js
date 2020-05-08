@@ -3,7 +3,6 @@ let posFigur = [];
 let clouds = [];
 let wallSize; // wenn die waende zu duenn sind kann man durchglitchen
 let samplePathAll = [
-  "src/sf/sample_0.mp3",
   "src/sf/sample_1.mp3",
   "src/sf/sample_2.mp3",
   "src/sf/sample_3.mp3",
@@ -24,9 +23,7 @@ let samplePathAll = [
   "src/sf/sample_18.mp3",
   "src/sf/sample_19.mp3",
   "src/sf/sample_20.mp3",
-  "src/sf/sample_21.mp3",
-  "src/sf/sample_22.mp3",
-  "src/sf/sample_23.mp3"
+  "src/sf/sample_21.mp3"
 ];
 let choosenSamples;
 let choosenSearchSound;
