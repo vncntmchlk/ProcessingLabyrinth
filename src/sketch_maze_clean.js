@@ -26,9 +26,7 @@ let samplePathAll = [
   "src/sf/sample_20.mp3",
   "src/sf/sample_21.mp3",
   "src/sf/sample_22.mp3",
-  "src/sf/sample_23.mp3",
-  "src/sf/sample_24.mp3",
-  "src/sf/sample_25.mp3"
+  "src/sf/sample_23.mp3"
 ];
 let choosenSamples;
 let choosenSearchSound;
