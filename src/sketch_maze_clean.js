@@ -94,9 +94,10 @@ function chooseRandomSamples () {
 
 function setup() {
     if (fixedSize) { // fuer groesse Displaysv
-        useWidth = 800;
-        useHeight = 800;
-        startWidth = 100;//100;
+        useWidth = displayWidth * (2/3);
+        useHeight = displayHeight * (4/5);
+        //startWidth = 100;//100;
+        startWidth = useWidth * 0.10;
         PlayerStartPos = 30;
         wallSize = 15;
         startBallSize = 24;
