@@ -37,6 +37,7 @@ let counter = 0;
 let button;
 let buttonFound;
 let soundPlayed = false;
+let soundPlayingNow = false;
 let nowPlayingFile = undefined;
 let foundText;
 let loadLabText;
@@ -70,6 +71,10 @@ let ballSpeed;
 let startBallSize;
 let numOfClouds = 5;
 let cloudPGs;
+
+let ctrlR = 20;
+let buttonPressed = false;
+let direction = 'UP'; 
 
 function preload() { // alle samples laden
   samplePathAll.forEach(function(sample) {
@@ -111,6 +116,42 @@ function setup() {
         startBallSize = 20;
         ballSpeed = 9;
     };  
+    
+    if (Controller && Controller.supported) {
+    Controller.search();
+  
+    window.addEventListener('gc.button.press', function(event) {
+        var button = event.detail;
+        if (button.value > 0.1) {
+            //console.log(event.detail);
+            if (button.name == 'MISCBUTTON_6') { 
+                if(soundPlayed){
+                    if(!mazeFreeze){
+                        checkFound()
+                    }
+                } else {
+                    if(!soundPlayingNow){
+                        playSearchSound()
+                    }
+                }
+            };
+            if (button.name == 'MISCBUTTON_8') { 
+                if(mazeFreeze && soundPlayed){
+                    resetMaze()
+                }
+            };
+            direction = button.name.replace('DPAD_', '')
+            
+            buttonPressed = true;
+            console.log(direction);
+        };
+        
+        }, false);
+    };
+    
+    window.addEventListener('gc.button.release', function(event) {
+        buttonPressed = false;
+    });
 
     ballSize = startBallSize;
     ballW = int(ballSize / 2) + 2;
@@ -120,12 +161,12 @@ function setup() {
 
     let elt = document.getElementById('buttonPos');
 
-    buttonFound = createButton('Gefunden');
+    buttonFound = createButton('Gefunden (Taste RB)');
     buttonFound.mousePressed(checkFound);
     buttonFound.parent(elt);
     buttonFound.hide();
    
-    button = createButton('verlorene Musik einmal hören');
+    button = createButton('verlorene Musik einmal hören (Taste RB)');
     button.parent(elt); // use element from page
     button.mousePressed(playSearchSound);
     searchSoundDuration = int(samples[choosenSearchSound].duration());
@@ -138,12 +179,12 @@ function setup() {
     foundText.style('color:white;');
     foundText.hide();
 
-    buttonReset = createButton('Neue Runde starten');
+    buttonReset = createButton('Neue Runde starten (Taste Start)');
     buttonReset.parent(elt); // use element from page
     buttonReset.mousePressed(resetMaze);
     buttonReset.hide();
 
-    buttonNext = createButton('Nächstes Level');
+    buttonNext = createButton('Nächstes Level (Taste Start)');
     buttonNext.parent(elt); // use element from page
     buttonNext.mousePressed(resetMaze);
     buttonNext.hide();
@@ -158,6 +199,8 @@ function setup() {
     angleMode(DEGREES); // 
     figur = new Player(PlayerStartPos, PlayerStartPos, ballSize, ballW, ballSpeed); // startposition angeben
     setupClouds(newDim);
+    
+    
 }
 
 function setupClouds (newDim) {
@@ -184,12 +227,14 @@ function playSearchSound () {
   foundText.html(`Wird abgespielt ... (${searchSoundDuration} Sekunden) `);
   foundText.show();
   button.hide();
+  soundPlayingNow = true;
   setTimeout(startGame, searchSoundDuration * 1000);
 }
 
 function startGame () {
   buttonFound.show();
   soundPlayed = true;
+  soundPlayingNow = false;
   mazeFreeze = false;
   nowPlayingFile = undefined;
   foundText.html(' Die Suche beginnt ...');
@@ -299,9 +344,11 @@ function draw() {
         clouds.forEach(function(cloud) {
           cloud.display();
         });  
-        if(mouseIsPressed){
-          figur.checkAngleAndMove();
+        if(buttonPressed){
+            figur.checkCtrlXY();
         };
+          //figur.checkAngleAndMove();
+        //};
         counter += 10;
       };
     }
@@ -354,6 +401,34 @@ class Player {
             }
     }
   }
+  
+    checkCtrlXY(){
+        switch (true) {
+            case (direction == 'MISCBUTTON_4'): //oben
+                let upColor = get(int(this.xpos), (int(this.ypos)- this.ballW));
+                if(upColor[0] != 0){ //kollision pruefen, nur bei weissen pixeln weiter bewegen
+                this.ypos = this.ypos - this.moveSpeed;
+                }
+                break;
+            case (direction == 'MISCBUTTON_2'): //rechts
+                let rightColor = get((int(this.xpos) + this.ballW), int(this.ypos));  
+                if(rightColor[0] != 0){
+                    this.xpos = this.xpos + this.moveSpeed;
+                }
+                break;
+            case (direction == 'MISCBUTTON_1'): //unten
+                let downColor = get(int(this.xpos), (int(this.ypos) + this.ballW)); 
+                if(downColor[0] != 0){
+                    this.ypos = this.ypos + this.moveSpeed;
+                }
+                break;
+            case (direction == 'MISCBUTTON_3'): //links
+                let leftColor = get((int(this.xpos) - this.ballW ), int(this.ypos)); 
+                if(leftColor[0] != 0){
+                    this.xpos = this.xpos - this.moveSpeed;
+                }
+        };
+    }
   
   display(){
     fill(this.color);
